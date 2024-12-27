@@ -1,0 +1,6 @@
+.vscode/
+obj/
+*txt
+chip8
+
+!src/chip8/
