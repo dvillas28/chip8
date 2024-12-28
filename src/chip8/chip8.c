@@ -32,17 +32,27 @@ int start_chip8(ChipContext *ctx)
         pixel.b = 0x59;
 
         // while app is running - Main Loop
+
+        long current_time;
+        long dt;
+        long last_cycle_time = getMicrotime();
+
         while (!quit)
         {
-            // process the keystrokes and use them if needed
             quit = process_input(quit, e, ctx);
-            // print_keys(ctx);
 
-            // check for the chip tick here?
+            current_time = getMicrotime();
+            dt = current_time - last_cycle_time;
+
+            if (dt > CTX_DELAY)
+            {
+                last_cycle_time = current_time;
+                chip_cycle(ctx);
+            }
 
             draw_display(&pixel, ctx, &win);
         }
-        print_mem(ctx);
+        // print_mem(ctx);
 
         // free resources and close SDL
         close_graphics(&win);

@@ -31,3 +31,10 @@ void print_keys(ChipContext *ctx)
     }
     printf("\n");
 }
+
+long getMicrotime()
+{
+    struct timeval currentTime;
+    gettimeofday(&currentTime, NULL);
+    return currentTime.tv_sec * (int)1e6 + currentTime.tv_usec;
+}

@@ -5,7 +5,8 @@
 #define CTX_WIDTH 64
 #define CTX_HEIGHT 32
 
-#define CTX_TICKS_PER_SECOND 700
+#define CTX_TICKS_PER_SECOND 600
+#define CTX_DELAY 3
 #define CTX_TICKS_TIMER_PER_SECOND 60
 
 typedef struct ChipContext
