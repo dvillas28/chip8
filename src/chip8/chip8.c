@@ -3,6 +3,8 @@
 int start_chip8(ChipContext *ctx)
 {
 
+    srand(time(NULL)); // initialization of random seed (for the random number)
+
     // start SDL and create window
     Window win;
     win.gScreenSurface = NULL;

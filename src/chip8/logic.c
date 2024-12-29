@@ -178,6 +178,20 @@ void op_ANNN(ChipContext *ctx, u8 n1, u8 n2, u8 n3)
     ctx->I = (n1 << 8) | (n2 << 4) | n3;
 }
 
+void op_BNNN(ChipContext *ctx, u8 n1, u8 n2, u8 n3)
+{
+    /* jump with offset */
+    ctx->PC = ctx->V[0] + ((n1 << 8) | (n2 << 4) | n3);
+}
+
+void op_CXNN(ChipContext *ctx, u8 x, u8 n1, u8 n2)
+{
+    /* Vx <- rand() & NN */
+    u8 byte = (n1 << 4) | n2;
+
+    ctx->V[x] = rand() & byte;
+}
+
 void op_DXYN(ChipContext *ctx, u8 x, u8 y, u8 n)
 {
     /*
@@ -218,6 +232,123 @@ void op_DXYN(ChipContext *ctx, u8 x, u8 y, u8 n)
     }
 }
 
+void op_EX9E(ChipContext *ctx, u8 x)
+{
+    /* skip if key[Vx] is pressed */
+
+    u8 key = ctx->V[x];
+
+    if (ctx->keypad[key] == 1)
+    {
+        ctx->PC += 2;
+    }
+
+    return;
+}
+
+void op_EXA1(ChipContext *ctx, u8 x)
+{
+    /* skip if key[Vx] is not pressed */
+
+    u8 key = ctx->V[x];
+
+    if (ctx->keypad[key] == 0)
+    {
+        ctx->PC += 2;
+    }
+}
+
+void op_FX07(ChipContext *ctx, u8 x)
+{
+    /* Vx <- delay_reg */
+    ctx->V[x] = ctx->delay_reg;
+}
+
+void op_FX15(ChipContext *ctx, u8 x)
+{
+    /* delay_reg <- Vx*/
+    ctx->delay_reg = ctx->V[x];
+}
+
+void op_FX18(ChipContext *ctx, u8 x)
+{
+    /* sound_reg <- Vx*/
+    ctx->sound_reg = ctx->V[x];
+}
+
+void op_FX1E(ChipContext *ctx, u8 x)
+{
+    /* add to index */
+    ctx->I += ctx->V[x];
+}
+
+void op_FX0A(ChipContext *ctx, u8 x)
+{
+    /* get key */
+    // decrement pc unless a key is pressed
+    bool over = false;
+
+    for (u8 key = 0x0; key <= 0xF; key++)
+    {
+        if (ctx->keypad[key] == 1)
+        {
+            ctx->V[x] = key;
+            over = true;
+        }
+    }
+
+    // if a keypad value was not detected
+    if (!over)
+    {
+        ctx->PC -= 2;
+    }
+}
+
+void op_FX29(ChipContext *ctx, u8 x)
+{
+    /* font character */
+    ctx->I = FONTSET_START_ADDRESS + (5 * ctx->V[x]);
+}
+
+void op_FX33(ChipContext *ctx, u8 x)
+{
+    /* binary-coded decimal conversion */
+    u8 number = ctx->V[x];
+
+    // unit
+    ctx->memory[ctx->I + 2] = number % 10;
+    number /= 10;
+
+    // tens
+    ctx->memory[ctx->I + 1] = number % 10;
+    number /= 10;
+
+    // hundreds
+    ctx->memory[ctx->I] = number % 10;
+}
+
+void op_FX55(ChipContext *ctx, u8 x)
+{
+    /* store memory */
+    u8 Vx = ctx->V[x];
+
+    for (u8 i = 0; i <= Vx; i++)
+    {
+        ctx->memory[ctx->I + i] = ctx->V[i];
+    }
+}
+
+void op_FX65(ChipContext *ctx, u8 x)
+{
+    /* load memory */
+    u8 Vx = ctx->V[x];
+
+    for (u8 i = 0; i <= Vx; i++)
+    {
+        ctx->V[i] = ctx->memory[ctx->I + i];
+    }
+}
+
 void chip_cycle(ChipContext *ctx)
 {
     u16 opcode;
@@ -227,6 +358,16 @@ void chip_cycle(ChipContext *ctx)
     ctx->PC += 2;
 
     decode(opcode, ctx);
+
+    if (ctx->delay_reg > 0)
+    {
+        ctx->delay_reg--;
+    }
+
+    if (ctx->sound_reg > 0)
+    {
+        ctx->sound_reg--;
+    }
 }
 
 void decode(u16 opcode, ChipContext *ctx)
@@ -335,11 +476,11 @@ void decode(u16 opcode, ChipContext *ctx)
         break;
 
     case 0xB:
-        /* BNNN */
+        op_BNNN(ctx, second, third, fourth); // jump with offset
         break;
 
     case 0xC:
-        /* CXNN */
+        op_CXNN(ctx, second, third, fourth); // Vx <- rand() & NN
         break;
 
     case 0xD:
@@ -350,11 +491,11 @@ void decode(u16 opcode, ChipContext *ctx)
         switch ((third << 4) | fourth)
         {
         case 0x9E:
-            /* EX9E */
+            op_EX9E(ctx, second); // skip if key[Vx] is pressed
             break;
 
         case 0xA1:
-            /*EXA1*/
+            op_EXA1(ctx, second); // skip if key[Vx] is not pressed
             break;
 
         default:
@@ -366,39 +507,39 @@ void decode(u16 opcode, ChipContext *ctx)
         switch ((third << 4) | fourth)
         {
         case 0x07:
-            /* FX07 */
+            op_FX07(ctx, second); // Vx <- delay_reg
             break;
 
         case 0x0A:
-            /* FX0A */
+            op_FX0A(ctx, second); // get key
             break;
 
         case 0x15:
-            /* FX15 */
+            op_FX15(ctx, second); // delay_reg <- Vx
             break;
 
         case 0x18:
-            /* FX18 */
+            op_FX18(ctx, second); // sound_reg <- Vx
             break;
 
         case 0x1E:
-            /* FX1E */
+            op_FX1E(ctx, second); // add to index
             break;
 
         case 0x29:
-            /* FX29 */
+            op_FX29(ctx, second); // font character
             break;
 
         case 0x33:
-            /* FX33 */
+            op_FX33(ctx, second); // binary-coded decimal conversion
             break;
 
         case 0x55:
-            /* FX55 */
+            op_FX55(ctx, second); // store memory
             break;
 
         case 0x65:
-            /* FX65 */
+            op_FX65(ctx, second); // load memory
             break;
 
         default:

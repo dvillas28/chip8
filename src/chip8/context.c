@@ -2,7 +2,7 @@
 
 const int RAM_SIZE = KB(4);
 
-const u16 FONTSET_START_ADDRESS = 0x50;
+// const u16 FONTSET_START_ADDRESS = 0x50;
 const int FONTSET_SIZE = 80;
 
 const u16 START_ADDRESS = 0x200;

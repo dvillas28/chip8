@@ -1,4 +1,5 @@
 #pragma once
+#include <time.h>
 #include <stdio.h>
 #include "types.h"
 
@@ -8,6 +9,8 @@
 #define CTX_TICKS_PER_SECOND 600
 #define CTX_DELAY 3
 #define CTX_TICKS_TIMER_PER_SECOND 60
+
+#define FONTSET_START_ADDRESS 0x50
 
 typedef struct ChipContext
 {
