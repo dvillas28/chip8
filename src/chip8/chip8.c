@@ -50,9 +50,9 @@ int start_chip8(ChipContext *ctx)
             {
                 last_cycle_time = current_time;
                 chip_cycle(ctx);
-            }
 
-            draw_display(&pixel, ctx, &win);
+                draw_display(&pixel, ctx, &win);
+            }
         }
         // print_mem(ctx);
 

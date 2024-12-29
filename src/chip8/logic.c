@@ -221,7 +221,7 @@ void op_DXYN(ChipContext *ctx, u8 x, u8 y, u8 n)
             {
 
                 // screen pixel also on - collision
-                if (*screen_pixel == 0x01)
+                if (*screen_pixel == 0xFFFFFFFF)
                 {
                     ctx->V[0xF] = 1;
                 }
@@ -376,6 +376,8 @@ void decode(u16 opcode, ChipContext *ctx)
     u8 second = (opcode >> 8) & 0xF;
     u8 third = (opcode >> 4) & 0xF;
     u8 fourth = opcode & 0xF;
+
+    // printf("opcode: %x%x%x%x\n", first, second, third, fourth);
 
     switch (first)
     {
