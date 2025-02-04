@@ -1,6 +1,6 @@
 #include "input.h"
 
-bool process_input(bool quit, SDL_Event e, ChipContext *ctx)
+bool process_input(bool quit, SDL_Event e, ChipContext *ctx, bool *debug_mode)
 {
 
     // handle event on queue
@@ -19,6 +19,29 @@ bool process_input(bool quit, SDL_Event e, ChipContext *ctx)
             // select what to do based on key press
             switch (e.key.keysym.sym)
             {
+
+            case SDLK_o:
+                // OJO: this also works as an pause mode for the emulator. Work on it later
+                if (*debug_mode)
+                {
+                    printf("Debug mode deactivated\n");
+                    *debug_mode = false;
+                }
+
+                else
+                {
+                    printf("Debug mode activated. Press P to advance a frame\n");
+                    *debug_mode = true;
+                }
+                break;
+
+            case SDLK_p:
+                if (*debug_mode)
+                {
+                    print_regs(ctx);
+                    chip_cycle((ctx));
+                };
+                break;
 
             case SDLK_1:
                 ctx->keypad[0x0] = 1;

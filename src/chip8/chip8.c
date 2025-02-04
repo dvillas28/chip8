@@ -20,6 +20,9 @@ int start_chip8(ChipContext *ctx)
         // main loop flag
         bool quit = false;
 
+        // debug mode flag
+        bool debug_mode = false;
+
         // event handler
         SDL_Event e;
 
@@ -41,18 +44,20 @@ int start_chip8(ChipContext *ctx)
 
         while (!quit)
         {
-            quit = process_input(quit, e, ctx);
+            quit = process_input(quit, e, ctx, &debug_mode);
 
-            current_time = getMicrotime();
-            dt = current_time - last_cycle_time;
-
-            if (dt > CTX_DELAY)
+            if (!debug_mode)
             {
-                last_cycle_time = current_time;
-                chip_cycle(ctx);
+                current_time = getMicrotime();
+                dt = current_time - last_cycle_time;
 
-                draw_display(&pixel, ctx, &win);
+                if (dt > CTX_DELAY)
+                {
+                    last_cycle_time = current_time;
+                    chip_cycle(ctx);
+                }
             }
+            draw_display(&pixel, ctx, &win);
         }
         // print_mem(ctx);
 

@@ -21,6 +21,7 @@ void print_regs(ChipContext *ctx)
         printf("V%x: %x | ", i, ctx->V[i]);
     }
     printf("\n");
+    fflush(stdout);
 }
 
 void print_keys(ChipContext *ctx)
