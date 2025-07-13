@@ -108,8 +108,11 @@ void op_8XY3(ChipContext *ctx, u8 x, u8 y)
 void op_8XY4(ChipContext *ctx, u8 x, u8 y)
 {
     u16 sum = ctx->V[x] + ctx->V[y];
-    // if result is greater than 8 bits
-    if (sum > 255U)
+    // mantain only the 8 LSB
+
+    ctx->V[x] = sum & 0xFF;
+    // if result is greater than 8 bits, update the carry flag
+    if (sum > 0xFF)
     {
         ctx->V[0xF] = 1;
     }
@@ -117,15 +120,18 @@ void op_8XY4(ChipContext *ctx, u8 x, u8 y)
     {
         ctx->V[0xF] = 0;
     }
-
-    // mantain only the 8 LSB
-    ctx->V[x] = sum & 0xFFU;
 }
 
 /* Vx <- Vx - Vy, this will affect the carry flag. */
 void op_8XY5(ChipContext *ctx, u8 x, u8 y)
 {
-    if (ctx->V[x] > ctx->V[y])
+    u8 Vx = ctx->V[x];
+    u8 Vy = ctx->V[y];
+
+    u16 diff = (ctx->V[x] - ctx->V[y]) & 0xFF;
+    ctx->V[x] = diff;
+
+    if (Vx >= Vy)
     {
         ctx->V[0xF] = 1;
     }
@@ -133,14 +139,16 @@ void op_8XY5(ChipContext *ctx, u8 x, u8 y)
     {
         ctx->V[0xF] = 0;
     }
-
-    ctx->V[x] -= ctx->V[y];
 }
 
 /* Vx <- Vy - Vx, this will affect the carry flag. */
 void op_8XY7(ChipContext *ctx, u8 x, u8 y)
 {
-    if (ctx->V[y] > ctx->V[x])
+    u16 result = (ctx->V[y] - ctx->V[x]) & 0xFF;
+
+    ctx->V[x] = result;
+
+    if (ctx->V[y] >= ctx->V[x])
     {
         ctx->V[0xF] = 1;
     }
@@ -148,28 +156,28 @@ void op_8XY7(ChipContext *ctx, u8 x, u8 y)
     {
         ctx->V[0xF] = 0;
     }
-
-    ctx->V[x] = ctx->V[y] - ctx->V[x];
 }
 
+// FIXME: 8XY6 not working in carry
 /* Vx <- SHR Vx. */
 void op_8XY6(ChipContext *ctx, u8 x, u8 y)
 {
     // TODO: add via configuration mode this before Vx <- Vy
 
     // store the LSB in VF
-    ctx->V[0xF] = ctx->V[x] & 0x1U;
+    ctx->V[0xF] = ctx->V[x] & 0x1;
     ctx->V[x] >>= 1;
 }
 
+// FIXME: 8XYE not working in carry
 /* Vx <- SHL Vx. */
 void op_8XYE(ChipContext *ctx, u8 x, u8 y)
 {
     // TODO: add via configuration mode this before Vx <- Vy
 
     // store the MSB in VF
-    ctx->V[0xF] = (ctx->V[x] & 0x8U) >> 7u;
-    ctx->V[x] <<= 1;
+    ctx->V[0xF] = (ctx->V[x] & 0x80) >> 7;
+    ctx->V[x] = (ctx->V[x] << 1) & 0xFF;
 }
 
 /* Sets the index register I to the value n1n2n3 */
@@ -279,9 +287,10 @@ void op_FX18(ChipContext *ctx, u8 x)
 /* I += Vx. */
 void op_FX1E(ChipContext *ctx, u8 x)
 {
-    ctx->I += ctx->V[x];
+    ctx->I = (ctx->I + ctx->V[x]) & 0xFFF; // keep between 12 bits
 }
 
+// FIXME: FX0A not working correctly on test 4
 /* Get key: stop executing instructions and wait for key input. */
 void op_FX0A(ChipContext *ctx, u8 x)
 {
@@ -315,24 +324,20 @@ void op_FX33(ChipContext *ctx, u8 x)
 {
     u8 number = ctx->V[x];
 
-    // unit
-    ctx->memory[ctx->I + 2] = number % 10;
-    number /= 10;
+    // hundreds
+    ctx->memory[ctx->I] = number / 100;
 
     // tens
-    ctx->memory[ctx->I + 1] = number % 10;
-    number /= 10;
+    ctx->memory[ctx->I + 1] = (number / 10) % 10;
 
-    // hundreds
-    ctx->memory[ctx->I] = number % 10;
+    // unit
+    ctx->memory[ctx->I + 2] = number % 10;
 }
 
 /* Store memory. Does not change the value of I. */
 void op_FX55(ChipContext *ctx, u8 x)
 {
-    u8 Vx = ctx->V[x];
-
-    for (u8 i = 0; i <= Vx; i++)
+    for (u8 i = 0; i <= x; i++)
     {
         ctx->memory[ctx->I + i] = ctx->V[i];
     }
@@ -341,9 +346,7 @@ void op_FX55(ChipContext *ctx, u8 x)
 /* Load memory. Does not change the value of I. */
 void op_FX65(ChipContext *ctx, u8 x)
 {
-    u8 Vx = ctx->V[x];
-
-    for (u8 i = 0; i <= Vx; i++)
+    for (u8 i = 0; i <= x; i++)
     {
         ctx->V[i] = ctx->memory[ctx->I + i];
     }
