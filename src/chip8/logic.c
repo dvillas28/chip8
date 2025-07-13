@@ -292,7 +292,7 @@ void op_FX1E(ChipContext *ctx, u8 x)
     ctx->I = (ctx->I + ctx->V[x]) & 0xFFF; // keep between 12 bits
 }
 
-// FIXME: FX0A not working correctly on test 4
+// FIXME: FX0A not working correctly on test 6
 /* Get key: stop executing instructions and wait for key input. */
 void op_FX0A(ChipContext *ctx, u8 x)
 {
