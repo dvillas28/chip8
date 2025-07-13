@@ -158,26 +158,28 @@ void op_8XY7(ChipContext *ctx, u8 x, u8 y)
     }
 }
 
-// FIXME: 8XY6 not working in carry
 /* Vx <- SHR Vx. */
 void op_8XY6(ChipContext *ctx, u8 x, u8 y)
 {
     // TODO: add via configuration mode this before Vx <- Vy
 
+    u8 carry_bit = ctx->V[x] & 0x1;
+
     // store the LSB in VF
-    ctx->V[0xF] = ctx->V[x] & 0x1;
-    ctx->V[x] >>= 1;
+    ctx->V[x] >>= 1; // perform the operation
+    ctx->V[0xF] = carry_bit;
 }
 
-// FIXME: 8XYE not working in carry
 /* Vx <- SHL Vx. */
 void op_8XYE(ChipContext *ctx, u8 x, u8 y)
 {
     // TODO: add via configuration mode this before Vx <- Vy
 
+    u8 carry_bit = (ctx->V[x] & 0x80) >> 7;
+
     // store the MSB in VF
-    ctx->V[0xF] = (ctx->V[x] & 0x80) >> 7;
-    ctx->V[x] = (ctx->V[x] << 1) & 0xFF;
+    ctx->V[x] = (ctx->V[x] << 1) & 0xFF; // perform the operation
+    ctx->V[0xF] = carry_bit;
 }
 
 /* Sets the index register I to the value n1n2n3 */
