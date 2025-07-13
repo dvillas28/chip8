@@ -58,7 +58,7 @@ Keypad       Keyboard
 
 ## About the Code
 
-For a detailed explanation of the flow and how this code works, please refer to [this document](docs/flow_of_how_it_works) (spanish only).
+For a detailed explanation of the flow and how this code works, please refer to [this document](docs/flow_of_how_it_works.md) (spanish only).
 
 ## Sources Used
 
