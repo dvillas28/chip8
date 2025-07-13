@@ -1,5 +1,6 @@
 #include "chip8.h"
 
+// The main loop of the CHIP-8 emulator.
 int start_chip8(ChipContext *ctx)
 {
 

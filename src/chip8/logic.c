@@ -1,112 +1,112 @@
 #include "logic.h"
 
+/* Clear screen: clear the display, turning all pixels off to 0. */
 void op_00E0(ChipContext *ctx)
 {
-    /* clear screen */
     for (int i = 0; i < CTX_WIDTH * CTX_HEIGHT; i++)
     {
         ctx->display[i] = 0x00;
     }
 }
 
+/* Return: Return from subroutine. */
 void op_00EE(ChipContext *ctx)
 {
-    /* return */
     ctx->SP--;                     // decrement from stack
     ctx->PC = ctx->stack[ctx->SP]; // pop value
 }
 
+/* Jump: Set PC to n1n2n3 */
 void op_1NNN(ChipContext *ctx, u8 n1, u8 n2, u8 n3)
 {
-    /* jump */
     ctx->PC = (n1 << 8) | (n2 << 4) | n3;
 }
 
+/* Call: Call subroutine at memory location n1n2n3. */
 void op_2NNN(ChipContext *ctx, u8 n1, u8 n2, u8 n3)
 {
-    /* call subroutine */
     ctx->stack[ctx->SP] = ctx->PC; // push current instruction to stack
     ctx->SP++;                     // increment stack pointer
 
     ctx->PC = (n1 << 8) | (n2 << 4) | n3;
 }
 
+/* Skip if Vx == n1n2. */
 void op_3XNN(ChipContext *ctx, u8 x, u8 n1, u8 n2)
 {
-    /* skip if equal */
     if (ctx->V[x] == ((n1 << 4) | n2))
     {
         ctx->PC += 2;
     }
 }
 
+/* Skip if Vx != n1n2. */
 void op_4XNN(ChipContext *ctx, u8 x, u8 n1, u8 n2)
 {
-    /* skip if not equal */
     if (ctx->V[x] != ((n1 << 4) | n2))
     {
         ctx->PC += 2;
     }
 }
 
+/* Skip if Vx == Vy. */
 void op_5XY0(ChipContext *ctx, u8 x, u8 y)
 {
-    /* skip if Vx == Vy */
     if (ctx->V[x] == ctx->V[y])
     {
         ctx->PC += 2;
     }
 }
 
+/* Skip if Vx != Vy. */
 void op_9XY0(ChipContext *ctx, u8 x, u8 y)
 {
-    /* skip if Vx != Vy */
     if (ctx->V[x] != ctx->V[y])
     {
         ctx->PC += 2;
     }
 }
 
+/* Vx <- n1n2. */
 void op_6XNN(ChipContext *ctx, u8 x, u8 n1, u8 n2)
 {
-    /* set register vx to the value nn */
     ctx->V[x] = (n1 << 4) | n2;
 }
 
+/* Vx += n1n2. */
 void op_7XNN(ChipContext *ctx, u8 x, u8 n1, u8 n2)
 {
-    /* add value nn to vx */
     // the flag register vF is NOT affected
     ctx->V[x] += (n1 << 4) | n2;
 }
 
+/* Vx <- Vy. */
 void op_8XY0(ChipContext *ctx, u8 x, u8 y)
 {
-    /* Vx <- Vy */
     ctx->V[x] = ctx->V[y];
 }
 
+/* Vx <- Vx OR Vy. */
 void op_8XY1(ChipContext *ctx, u8 x, u8 y)
 {
-    /* Vx <- Vx OR Vy */
     ctx->V[x] |= ctx->V[y];
 }
 
+/* Vx <- Vx AND Vy. */
 void op_8XY2(ChipContext *ctx, u8 x, u8 y)
 {
-    /* Vx <- Vx AND Vy */
     ctx->V[x] &= ctx->V[y];
 }
 
+/* Vx <- Vx XOR Vy. */
 void op_8XY3(ChipContext *ctx, u8 x, u8 y)
 {
-    /* Vx <- Vx XOR Vy */
     ctx->V[x] ^= ctx->V[y];
 }
 
+/* Vx <- Vx + Vy, this will affect the carry flag. */
 void op_8XY4(ChipContext *ctx, u8 x, u8 y)
 {
-    /* Vx <- Vx + Vy, this will affect the carry flag */
     u16 sum = ctx->V[x] + ctx->V[y];
     // if result is greater than 8 bits
     if (sum > 255U)
@@ -122,9 +122,9 @@ void op_8XY4(ChipContext *ctx, u8 x, u8 y)
     ctx->V[x] = sum & 0xFFU;
 }
 
+/* Vx <- Vx - Vy, this will affect the carry flag. */
 void op_8XY5(ChipContext *ctx, u8 x, u8 y)
 {
-    /* Vx <- Vx - Vy, this will affect the carry flag */
     if (ctx->V[x] > ctx->V[y])
     {
         ctx->V[0xF] = 1;
@@ -137,9 +137,9 @@ void op_8XY5(ChipContext *ctx, u8 x, u8 y)
     ctx->V[x] -= ctx->V[y];
 }
 
+/* Vx <- Vy - Vx, this will affect the carry flag. */
 void op_8XY7(ChipContext *ctx, u8 x, u8 y)
 {
-    /* Vx <- Vy - Vx, this will affect the carry flag */
     if (ctx->V[y] > ctx->V[x])
     {
         ctx->V[0xF] = 1;
@@ -152,9 +152,9 @@ void op_8XY7(ChipContext *ctx, u8 x, u8 y)
     ctx->V[x] = ctx->V[y] - ctx->V[x];
 }
 
+/* Vx <- SHR Vx. */
 void op_8XY6(ChipContext *ctx, u8 x, u8 y)
 {
-    /* Vx <- SHR Vx */
     // TODO: add via configuration mode this before Vx <- Vy
 
     // store the LSB in VF
@@ -162,9 +162,9 @@ void op_8XY6(ChipContext *ctx, u8 x, u8 y)
     ctx->V[x] >>= 1;
 }
 
+/* Vx <- SHL Vx. */
 void op_8XYE(ChipContext *ctx, u8 x, u8 y)
 {
-    /* Vx <- SHL Vx */
     // TODO: add via configuration mode this before Vx <- Vy
 
     // store the MSB in VF
@@ -172,32 +172,32 @@ void op_8XYE(ChipContext *ctx, u8 x, u8 y)
     ctx->V[x] <<= 1;
 }
 
+/* Sets the index register I to the value n1n2n3 */
 void op_ANNN(ChipContext *ctx, u8 n1, u8 n2, u8 n3)
 {
-    /* sets the index register I to the value NNN */
     ctx->I = (n1 << 8) | (n2 << 4) | n3;
 }
 
+/* Jump with offset: Jump to the address n1n2n3 + V0 */
 void op_BNNN(ChipContext *ctx, u8 n1, u8 n2, u8 n3)
 {
-    /* jump with offset */
     ctx->PC = ctx->V[0] + ((n1 << 8) | (n2 << 4) | n3);
 }
 
+/* Vx <- rand() & n1n2 */
 void op_CXNN(ChipContext *ctx, u8 x, u8 n1, u8 n2)
 {
-    /* Vx <- rand() & NN */
     u8 byte = (n1 << 4) | n2;
 
     ctx->V[x] = rand() & byte;
 }
 
+/*
+Draw an N pixels tall sprite from the memory location that the I index register is holding to
+the screen, at the horizontal X coordinate in Vx and the Y coordinate in Vy.
+*/
 void op_DXYN(ChipContext *ctx, u8 x, u8 y, u8 n)
 {
-    /*
-    draw an N pixels tall sprite from the memory location that the I index register is holding to
-    the screen, at the horizontal X coordinate in VX and the Y coordinate in VY
-    */
 
     u8 xPos = ctx->V[x] % 64;
     u8 yPos = ctx->V[y] % 32;
@@ -232,9 +232,9 @@ void op_DXYN(ChipContext *ctx, u8 x, u8 y, u8 n)
     }
 }
 
+/* Skip the following instruction if key[Vx] is pressed. */
 void op_EX9E(ChipContext *ctx, u8 x)
 {
-    /* skip if key[Vx] is pressed */
 
     u8 key = ctx->V[x];
 
@@ -246,9 +246,9 @@ void op_EX9E(ChipContext *ctx, u8 x)
     return;
 }
 
+/* Skip the following instruction if key[Vx] is not pressed. */
 void op_EXA1(ChipContext *ctx, u8 x)
 {
-    /* skip if key[Vx] is not pressed */
 
     u8 key = ctx->V[x];
 
@@ -258,33 +258,33 @@ void op_EXA1(ChipContext *ctx, u8 x)
     }
 }
 
+/* Vx <- delay_reg. */
 void op_FX07(ChipContext *ctx, u8 x)
 {
-    /* Vx <- delay_reg */
     ctx->V[x] = ctx->delay_reg;
 }
 
+/* delay_reg <- Vx. */
 void op_FX15(ChipContext *ctx, u8 x)
 {
-    /* delay_reg <- Vx*/
     ctx->delay_reg = ctx->V[x];
 }
 
+/* sound_reg <- Vx. */
 void op_FX18(ChipContext *ctx, u8 x)
 {
-    /* sound_reg <- Vx*/
     ctx->sound_reg = ctx->V[x];
 }
 
+/* I += Vx. */
 void op_FX1E(ChipContext *ctx, u8 x)
 {
-    /* add to index */
     ctx->I += ctx->V[x];
 }
 
+/* Get key: stop executing instructions and wait for key input. */
 void op_FX0A(ChipContext *ctx, u8 x)
 {
-    /* get key */
     // decrement pc unless a key is pressed
     bool over = false;
 
@@ -304,15 +304,15 @@ void op_FX0A(ChipContext *ctx, u8 x)
     }
 }
 
+/* Font character: I <- address of the hex char in Vx.  */
 void op_FX29(ChipContext *ctx, u8 x)
 {
-    /* font character */
     ctx->I = FONTSET_START_ADDRESS + (5 * ctx->V[x]);
 }
 
+/* Binary-coded decimal conversion. */
 void op_FX33(ChipContext *ctx, u8 x)
 {
-    /* binary-coded decimal conversion */
     u8 number = ctx->V[x];
 
     // unit
@@ -327,9 +327,9 @@ void op_FX33(ChipContext *ctx, u8 x)
     ctx->memory[ctx->I] = number % 10;
 }
 
+/* Store memory. Does not change the value of I. */
 void op_FX55(ChipContext *ctx, u8 x)
 {
-    /* store memory */
     u8 Vx = ctx->V[x];
 
     for (u8 i = 0; i <= Vx; i++)
@@ -338,9 +338,9 @@ void op_FX55(ChipContext *ctx, u8 x)
     }
 }
 
+/* Load memory. Does not change the value of I. */
 void op_FX65(ChipContext *ctx, u8 x)
 {
-    /* load memory */
     u8 Vx = ctx->V[x];
 
     for (u8 i = 0; i <= Vx; i++)
@@ -349,6 +349,7 @@ void op_FX65(ChipContext *ctx, u8 x)
     }
 }
 
+// Fetch an opcode from the ROM loaded in memory and decode it.
 void chip_cycle(ChipContext *ctx)
 {
     u16 opcode;
@@ -370,6 +371,7 @@ void chip_cycle(ChipContext *ctx)
     }
 }
 
+// Execute an instruction based on the opcode.
 void decode(u16 opcode, ChipContext *ctx)
 {
     u8 first = (opcode >> 12) & 0xF;

@@ -7,6 +7,7 @@ const int FONTSET_SIZE = 80;
 
 const u16 START_ADDRESS = 0x200;
 
+// Initialization of memory, fonts, registers and display.
 void init_ctx(ChipContext *ctx)
 {
     // write zeroes in memory
@@ -39,6 +40,7 @@ void init_ctx(ChipContext *ctx)
     }
 }
 
+// Load fonts of the 16 characters into memory, starting on address 0x50.
 void load_fonts(ChipContext *ctx)
 {
 
@@ -70,6 +72,7 @@ void load_fonts(ChipContext *ctx)
     }
 }
 
+// Load ROM file into memory, starting on address 0x200.
 int load_rom(ChipContext *cxt, char *filename)
 {
     FILE *file = fopen(filename, "r");

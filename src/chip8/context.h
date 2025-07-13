@@ -12,6 +12,7 @@
 
 #define FONTSET_START_ADDRESS 0x50
 
+// Contains the memory array, registers, display array and the keypad array
 typedef struct ChipContext
 {
     // 4KB = 4096B = 2^12B of memory

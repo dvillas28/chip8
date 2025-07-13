@@ -1,5 +1,6 @@
 #include "input.h"
 
+// Update the quit and debug_mode variables and keypad based on the event input received.
 bool process_input(bool quit, SDL_Event e, ChipContext *ctx, bool *debug_mode)
 {
 

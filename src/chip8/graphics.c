@@ -2,6 +2,7 @@
 #include "utils.h"
 #include "input.h"
 
+// Initialization of the SDL graphics library.
 bool init_graphics(Window *win)
 {
     int SCREEN_WIDTH = PIXEL_SIZE * CTX_WIDTH;
@@ -37,6 +38,7 @@ bool init_graphics(Window *win)
     return success;
 }
 
+// Close the Window object and quit the SDL subsystem.
 void close_graphics(Window *win)
 {
 
@@ -48,6 +50,7 @@ void close_graphics(Window *win)
     SDL_Quit();
 }
 
+// Draw the pixels on the SDL_Surface based on the values on the ctx->display array.
 void draw_display(Pixel *pixel, ChipContext *ctx, Window *win)
 {
     u32 color;
